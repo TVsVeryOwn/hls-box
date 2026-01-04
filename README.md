@@ -163,13 +163,81 @@ Test with VLC, mpv, ffplay, or any HLS-capable player:
 
 ```ffplay http://127.0.0.1:8080/hls/nginx0/index.m3u8```
 
-### Optional: Cloudflare Tunnel (public access)
+## Optional: Cloudflare Tunnel (public access)
 
-This stack supports Cloudflare Tunnel for public access without opening ports.
+This stack is designed to work **locally first**. Public access is optional.
+
+If you want permanent public HLS URLs without opening ports, `hls-box` supports
+Cloudflare Tunnel.
+
+### What Cloudflare does here
+
+- Exposes **HTTP only** (never RTMP)
+- Does **not** cache playlists or segments
+- Provides stable public URLs
+- Keeps your origin private
+
+Cloudflare **never** touches FFmpeg or RTMP.
 
 Example public URL:
 
 ```https://hls.example.com/hls/nginx0/index.m3u8```
+
+---
+
+### Prerequisites
+
+- A Cloudflare account
+- A domain added to Cloudflare
+- `cloudflared` tunnel token
+
+---
+
+### Setup steps
+
+1. Create a tunnel in Cloudflare:
+
+   https://one.dash.cloudflare.com → Zero Trust → Networks → Tunnels
+
+2. Copy the **tunnel token**
+
+3. Create a `.env` file in the project root:
+
+
+4. Update your hostname in `docker-compose.yml` if needed:
+
+```hls.example.com → http://http:8080```
+
+
+5. Start the stack:
+
+docker compose up -d  
+
+---
+
+### Public playback URL
+
+Once running, your stream will be available at:
+```https://hls.example.com/hls/nginx0/index.m3u8```
+
+Additional streams:
+
+```
+https://hls.example.com/hls/nginx1/index.m3u8
+https://hls.example.com/hls/nginx2/index.m3u8
+```
+
+
+---
+
+### Important Cloudflare notes
+
+- Cloudflare caching is **explicitly disabled**
+- Playlists are marked `no-store`
+- Segments are treated as dynamic content
+- Query-string cache busting is supported
+
+If Cloudflare caching is enabled, **live HLS will break**.
 
 
 #### Notes:
@@ -209,6 +277,3 @@ Verify playlist content:
 Probe a segment:
 
 ```ffprobe hls/nginx0/69.ts```
-
-## License
-MIT
