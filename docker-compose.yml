@@ -1,0 +1,84 @@
+x-ffmpeg-common: &ffmpeg_common
+  image: linuxserver/ffmpeg:latest
+  depends_on:
+    - rtmp
+  # linuxserver/ffmpeg defaults ENTRYPOINT to ffmpeg; override so we can run a shell script
+  entrypoint: ["/bin/sh", "/usr/local/bin/rtmp-to-hls.posix.sh"]
+  environment: &ffmpeg_env
+    RTMP_BASE: rtmp://rtmp:1935/live
+    OUT_BASE: /hls
+    HLS_TIME: ${HLS_TIME:-5}
+    HLS_LIST_SIZE: ${HLS_LIST_SIZE:-6}
+    CLEAN_TS: ${CLEAN_TS:-0}
+  volumes:
+    - ./hls:/hls
+    - ./rtmp-to-hls.posix.sh:/usr/local/bin/rtmp-to-hls.posix.sh:ro
+  restart: unless-stopped
+
+services:
+  rtmp:
+    image: alfg/nginx-rtmp:latest
+    platform: linux/amd64
+    container_name: hlsbox-rtmp
+    ports:
+      - "1935:1935"
+    volumes:
+      - ./nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
+    entrypoint: ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;"]
+    restart: unless-stopped
+
+
+  http:
+    image: nginx:alpine
+    container_name: hlsbox-http
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx-http.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./hls:/usr/share/nginx/html/hls:ro
+    restart: unless-stopped
+  cloudflared:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:latest
+    command: ["tunnel", "--no-autoupdate", "run", "--token", "${TUNNEL_TOKEN}"]
+    restart: unless-stopped
+    depends_on:
+      - http
+
+
+
+  ffmpeg_nginx0:
+      <<: *ffmpeg_common
+      container_name: hlsbox-ffmpeg-nginx0
+      command: ["nginx0"    ]
+      volumes:
+        - ./hls:/hls
+        - ./rtmp-to-hls.posix.sh:/usr/local/bin/rtmp-to-hls.posix.sh:ro
+
+
+  ffmpeg_nginx1:
+      <<: *ffmpeg_common
+      container_name: hlsbox-ffmpeg-nginx1
+      command: ["nginx1"]
+      volumes:
+        - ./hls:/hls
+        - ./rtmp-to-hls.posix.sh:/usr/local/bin/rtmp-to-hls.posix.sh:ro
+
+
+
+
+
+
+  # Add more streams by copy/pasting this pattern:
+  #
+  # ffmpeg_nginx2:
+  #   <<: *ffmpeg_common
+  #   container_name: hlsbox-ffmpeg-nginx2
+  #   environment:
+  #     <<: *ffmpeg_env
+  #     STREAM_KEY: ${STREAM_KEY_NGINX2:-nginx2}
+  #   command:
+  #     - sh
+  #     - /usr/local/bin/rtmp-to-hls.posix.sh
+  #     - ${STREAM_KEY_NGINX2:-nginx2}
+  #   profiles: ["nginx2"]

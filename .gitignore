@@ -1,0 +1,19 @@
+# Secrets
+.env
+*.token
+*.key
+
+# Program Data
+hls/
+
+# Docker
+*.pid
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Editor
+.vscode/
