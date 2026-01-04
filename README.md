@@ -273,6 +273,18 @@ Verify playlist content:
 
 ```curl -s http://127.0.0.1:8080/hls/nginx0/index.m3u8 | tail -n 10```
 
+ ## AI usage disclosure
+
+AI tools were used during the development of this project as a debugging
+and reasoning assistant.
+
+The AI did not originate the problem statement, requirements, or operational
+constraints. Those were derived from hands-on testing of live HLS systems
+and observed failure modes.
+
+Design decisions, trade-offs, and validation were made by the project author,
+with AI used to accelerate iteration and clarify edge cases.
+
 
 Probe a segment:
 
