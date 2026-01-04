@@ -15,7 +15,7 @@ usage() {
 
 log() {
   # ISO-ish timestamp
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
+  echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] $*" >&2
 }
 
 [ $# -eq 1 ] || usage
@@ -39,8 +39,11 @@ if [ "$CLEAN_TS" = "1" ]; then
   rm -f "$OUT_DIR"/*.ts "$PLAYLIST" 2>/dev/null || true
 fi
 
-command -v ffprobe >/dev/null 2>&1 || { log "ffprobe not found"; exit 127; }
-command -v ffmpeg  >/dev/null 2>&1 || { log "ffmpeg not found";  exit 127; }
+command -v ffprobe >/dev/null 2>&1 || { log "ffprobe not found"; exit 1; }
+command -v ffmpeg  >/dev/null 2>&1 || { log "ffmpeg not found";  exit 1; }
+
+cleanup() { log "stopping"; }
+trap cleanup INT TERM
 
 # ffprobe flags: match the "patient" probe that you confirmed works
 PROBE_FLAGS='
@@ -112,6 +115,7 @@ while :; do
     -f hls \
     -hls_time "$HLS_TIME" -hls_list_size "$HLS_LIST_SIZE" \
     -hls_flags delete_segments+independent_segments+temp_file \
+    -hls_delete_threshold "$KEEP_SEGMENTS" \
     -hls_allow_cache 0 \
     -hls_segment_filename "${OUT_DIR}/%013d.ts" \
     "$PLAYLIST" \
