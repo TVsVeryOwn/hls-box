@@ -273,6 +273,11 @@ Verify playlist content:
 
 ```curl -s http://127.0.0.1:8080/hls/nginx0/index.m3u8 | tail -n 10```
 
+Probe a segment:
+
+```ffprobe hls/nginx0/69.ts```
+
+
  ## AI usage disclosure
 
 AI tools were used during the development of this project as a debugging
@@ -284,8 +289,3 @@ and observed failure modes.
 
 Design decisions, trade-offs, and validation were made by the project author,
 with AI used to accelerate iteration and clarify edge cases.
-
-
-Probe a segment:
-
-```ffprobe hls/nginx0/69.ts```
