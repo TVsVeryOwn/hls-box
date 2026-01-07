@@ -17,3 +17,7 @@ hls/
 
 # Editor
 .vscode/
+
+# AI
+CONTEXT.md
+cheatsheet.md
